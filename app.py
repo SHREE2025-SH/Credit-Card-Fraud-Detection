@@ -71,8 +71,10 @@ def load_data(file, n_samples, fraud_pct):
 # ── Helper: train pipeline ─────────────────────────────────────────────────────
 @st.cache_data(show_spinner="Training models…")
 def train_pipeline(df_json):
-    df = pd.read_json(df_json)
-    X = df.drop("Class", axis=1)
+    import io
+    df = pd.read_json(io.StringIO(df_json))
+
+    X = df.drop(columns=["Class"])
     y = df["Class"]
 
     X_train, X_test, y_train, y_test = train_test_split(
