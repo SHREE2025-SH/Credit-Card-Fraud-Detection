@@ -16,6 +16,12 @@ from imblearn.over_sampling import SMOTE
 import warnings
 warnings.filterwarnings('ignore')
 
+
+# ADD THIS LINE TEMPORARILY
+st.cache_data.clear()
+
+st.set_page_config(...)
+
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Credit Card Fraud Detection",
