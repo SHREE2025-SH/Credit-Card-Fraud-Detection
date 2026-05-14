@@ -256,7 +256,7 @@ def style_recall(val):
 
 styled = (comparison.style
           .format({c: "{:.4f}" for c in ["Accuracy","Precision","Recall","F1-Score","ROC-AUC"]})
-          .applymap(style_recall, subset=["Recall"]))
+          .map(style_recall, subset=["Recall"]))
 st.dataframe(styled, use_container_width=True)
 
 best_row = comparison.iloc[0]
