@@ -10,17 +10,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
-    confusion_matrix, roc_auc_score, roc_curve, classification_report
+    confusion_matrix, roc_auc_score, roc_curve
 )
 from imblearn.over_sampling import SMOTE
 import warnings
 warnings.filterwarnings('ignore')
-
-
-# ADD THIS LINE TEMPORARILY
-st.cache_data.clear()
-
-st.set_page_config(...)
 
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -123,10 +117,10 @@ def train_pipeline(df_json):
     y_proba_dt  = dt.predict_proba(X_test_sc)[:, 1]
 
     models_map = {
-        "Baseline RF (No SMOTE)":    (y_pred_base, y_proba_base, base_rf),
-        "Random Forest + SMOTE":     (y_pred_rf,   y_proba_rf,   rf),
-        "Logistic Regression + SMOTE": (y_pred_lr, y_proba_lr,   lr),
-        "Decision Tree + SMOTE":     (y_pred_dt,   y_proba_dt,   dt),
+        "Baseline RF (No SMOTE)":      (y_pred_base, y_proba_base, base_rf),
+        "Random Forest + SMOTE":       (y_pred_rf,   y_proba_rf,   rf),
+        "Logistic Regression + SMOTE": (y_pred_lr,   y_proba_lr,   lr),
+        "Decision Tree + SMOTE":       (y_pred_dt,   y_proba_dt,   dt),
     }
 
     rows = []
@@ -157,9 +151,6 @@ def train_pipeline(df_json):
         "smote_counts":  smote_counts,
         "feature_imp":   feature_imp.to_dict(),
         "X_columns":     X.columns.tolist(),
-        "scaler_mean":   scaler.mean_.tolist(),
-        "scaler_scale":  scaler.scale_.tolist(),
-        # keep RF model for feature-importance & live prediction
         "rf_model":      rf,
         "scaler":        scaler,
     }
@@ -182,7 +173,6 @@ with st.expander("Show raw data sample"):
 st.subheader("Class distribution & Amount statistics")
 fig_eda, axes = plt.subplots(1, 3, figsize=(16, 4))
 
-# Class bar chart
 class_counts = df["Class"].value_counts()
 axes[0].bar(["Legitimate", "Fraud"], class_counts.values,
             color=["#3498db", "#e74c3c"], edgecolor="black", alpha=0.8)
@@ -194,14 +184,12 @@ for rect in axes[0].patches:
                  f"{int(h):,}\n({h/len(df)*100:.1f}%)",
                  ha="center", va="bottom", fontsize=9, fontweight="bold")
 
-# Amount boxplot
 df.boxplot(column="Amount", by="Class", ax=axes[1])
 axes[1].set_title("Transaction Amount by Class")
 axes[1].set_xlabel("Class (0=Legit, 1=Fraud)")
 axes[1].set_ylabel("Amount ($)")
 plt.suptitle("")
 
-# Amount histogram (log scale)
 axes[2].hist(df[df["Class"]==0]["Amount"], bins=50, alpha=0.6, label="Legit",  color="#3498db")
 axes[2].hist(df[df["Class"]==1]["Amount"], bins=50, alpha=0.6, label="Fraud",  color="#e74c3c")
 axes[2].set_title("Amount Distribution")
@@ -284,7 +272,6 @@ with tab1:
     colors = ["#95a5a6", "#2ecc71", "#3498db", "#f39c12"]
     metrics = ["Recall", "F1-Score", "ROC-AUC"]
     for i, metric in enumerate(metrics):
-        vals  = [models_preds[m]["y_pred"] for m in comparison["Model"]]
         names = comparison["Model"].tolist()
         metric_vals = comparison[metric].tolist()
         axes[i].barh(names, metric_vals, color=colors, edgecolor="black", alpha=0.8)
@@ -337,8 +324,8 @@ with tab4:
 st.header("5. Live Transaction Prediction")
 st.markdown("Enter a transaction's features below, or use the **random** buttons to generate a sample.")
 
-rf_model = results["rf_model"]
-scaler   = results["scaler"]
+rf_model  = results["rf_model"]
+scaler    = results["scaler"]
 X_columns = results["X_columns"]
 
 col_gen1, col_gen2, _ = st.columns([1, 1, 4])
@@ -375,8 +362,8 @@ with st.form("prediction_form"):
 if submitted:
     input_df = pd.DataFrame([inputs])
     input_scaled = scaler.transform(input_df)
-    pred    = rf_model.predict(input_scaled)[0]
-    prob    = rf_model.predict_proba(input_scaled)[0][1]
+    pred = rf_model.predict(input_scaled)[0]
+    prob = rf_model.predict_proba(input_scaled)[0][1]
 
     if pred == 1:
         st.error(f"🚨 **FRAUD DETECTED** — Fraud probability: {prob:.2%}")
